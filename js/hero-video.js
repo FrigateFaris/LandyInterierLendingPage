@@ -75,15 +75,16 @@
   let firstPass = firstTotal, inFlight = 0, next = 0, phase = 0;
   function pick() {
     if (phase === 0) { while (next < order.length && (req[order[next]] || !isFirst(order[next]))) next++; return next < order.length && isFirst(order[next]) ? order[next] : -1; }
-    for (let d = 0; d <= 60; d++) {        // nearest missing frame around where the visitor is
-      if (curIdx + d < N && !req[curIdx + d]) return curIdx + d;
-      if (curIdx - d >= 0 && !req[curIdx - d]) return curIdx - d;
+    for (let d = 0; d <= 60; d++) {        // nearest missing frame where the visitor is heading, then behind
+      const a = curIdx + dir * d, b = curIdx - dir * d;
+      if (a >= 0 && a < N && !req[a]) return a;
+      if (d < 20 && b >= 0 && b < N && !req[b]) return b;
     }
     while (next < order.length && req[order[next]]) next++;
     return next < order.length ? order[next] : -1;
   }
   function pump() {
-    const limit = phase === 0 ? 8 : 3;
+    const limit = phase === 0 ? 8 : 6;
     while (inFlight < limit) {
       const i = pick(); if (i < 0) return;
       const im = new Image();
@@ -114,6 +115,8 @@
     }
     return -1;
   }
+
+  let dir = 1, lastIdx = 0;   // scroll direction: the background loader fetches frames ahead first
 
   /* ---------- scene titles: on arrival in each zone a big room title appears at the side
      (sides alternate), then leaves before the next zone; every line is scrubbed by scroll ---------- */
@@ -172,9 +175,10 @@
     const t = st < DUR ? toVideo(st) : st;     // st = linear scroll time, t = video time
     const fi = clamp(Math.min(t, DUR) / DUR, 0, 1) * (N - 1);
     curIdx = Math.round(fi);
+    if (curIdx !== lastIdx) { dir = curIdx > lastIdx ? 1 : -1; lastIdx = curIdx; }
     const p = pair(fi);
     if (p) {
-      const IW = p[0].naturalWidth, IH = p[0].naturalHeight;
+      const IW = p[0].naturalWidth || p[0].width, IH = p[0].naturalHeight || p[0].height;
       const cs = Math.max(canvas.width / IW, canvas.height / IH);   // cover
       const sw = canvas.width / cs, sh = canvas.height / cs;
       blit(ctx, p, (IW - sw) / 2, (IH - sh) / 2, sw, sh, canvas.width, canvas.height);

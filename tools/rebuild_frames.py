@@ -1,7 +1,7 @@
 """Rebuild the hero image sequences from AI-upscaled source frames.
 
 usage: python tools/rebuild_frames.py <folder with upscaled fNNNN.png at 24 fps>
--> media/apartment/frames/   (60 fps, 1600x900, desktop)
+-> media/apartment/frames/   (30 fps, 1600x900, desktop)
    media/apartment/frames-m/ (30 fps, 960x540, mobile)
    WebP q85: ~3x smaller than JPEG at SSIM ~0.99 against the master
    prints the frame counts to put into HERO.frames / framesMobile
@@ -22,7 +22,8 @@ run(['-framerate', '24', '-i', os.path.join(src, 'f%04d.png'),
      '-vf', 'scale=1920:1080:flags=lanczos,minterpolate=fps=60:mi_mode=mci:mc_mode=aobmc:me_mode=bidir:vsbmc=1',
      '-c:v', 'libx264', '-crf', '8', '-preset', 'medium', '-pix_fmt', 'yuv444p', master])
 
-for name, vf in (('frames', 'scale=1600:900:flags=lanczos'),
+# both sequences at 30 fps: the page blends neighbouring frames while scrubbing, so 60 fps only doubled the download
+for name, vf in (('frames', r'select=not(mod(n\,2)),scale=1600:900:flags=lanczos'),
                  ('frames-m', r'select=not(mod(n\,2)),scale=960:540:flags=lanczos')):
     out = os.path.join(root, name)
     shutil.rmtree(out, ignore_errors=True); os.makedirs(out)
