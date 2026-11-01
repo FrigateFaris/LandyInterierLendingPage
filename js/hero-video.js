@@ -51,9 +51,12 @@
   }
 
   /* ---------- frames: coarse pass first (every 16th), then refined, so the walk is usable at once ---------- */
-  const SEQ = (innerWidth < 900 && CFG.framesMobile) || CFG.frames;
-  const N = SEQ.count;
-  const imgs = new Array(N), ok = new Uint8Array(N);
+  // AVIF where the browser has it (about half the size of WebP at the same quality), WebP otherwise
+  const mobileSeq = innerWidth < 900;
+  const AVIF_SEQ = (mobileSeq && CFG.framesMobile) || CFG.frames;
+  const WEBP_SEQ = (mobileSeq && CFG.fallbackMobile) || CFG.fallback || AVIF_SEQ;
+  let SEQ = AVIF_SEQ, N = SEQ.count;
+  let imgs = new Array(N), ok = new Uint8Array(N);
   let shown = false, dirty = true, curIdx = 0;
   const t0 = performance.now();
   const show = () => {
@@ -67,12 +70,18 @@
   // phase 0 (before the page has loaded): only every 16th frame — enough to scrub the whole walk.
   // phase 1 (after window load): the rest, a few at a time, frames around the current scroll position first,
   // so the tab stops "loading" quickly and scrolling never competes with a flood of requests.
-  const order = [], seen = new Uint8Array(N), req = new Uint8Array(N);
-  [16, 8, 4, 2, 1].forEach(step => { for (let i = 0; i < N; i += step) if (!seen[i]) { seen[i] = 1; order.push(i); } });
-  if (!seen[N - 1]) order.splice(1, 0, N - 1);
+  let order = [], req = new Uint8Array(N), firstTotal = 0, firstPass = 0, inFlight = 0, next = 0, phase = 0, started = false;
   const isFirst = i => i % 16 === 0 || i === N - 1;
-  const firstTotal = order.filter(isFirst).length;
-  let firstPass = firstTotal, inFlight = 0, next = 0, phase = 0;
+  function setup(seq) {
+    if (started) return;
+    SEQ = seq; N = seq.count;
+    imgs = new Array(N); ok = new Uint8Array(N); req = new Uint8Array(N); order = [];
+    const seen = new Uint8Array(N);
+    [16, 8, 4, 2, 1].forEach(step => { for (let i = 0; i < N; i += step) if (!seen[i]) { seen[i] = 1; order.push(i); } });
+    if (!seen[N - 1]) order.splice(1, 0, N - 1);
+    firstTotal = firstPass = order.filter(isFirst).length;
+    next = 0; started = true; pump();
+  }
   function pick() {
     if (phase === 0) { while (next < order.length && (req[order[next]] || !isFirst(order[next]))) next++; return next < order.length && isFirst(order[next]) ? order[next] : -1; }
     for (let d = 0; d <= 60; d++) {        // nearest missing frame where the visitor is heading, then behind
@@ -84,6 +93,7 @@
     return next < order.length ? order[next] : -1;
   }
   function pump() {
+    if (!started) return;
     const limit = phase === 0 ? 8 : 6;
     while (inFlight < limit) {
       const i = pick(); if (i < 0) return;
@@ -104,7 +114,12 @@
       imgs[i] = im;
     }
   }
-  pump();
+  // a 1x1 AVIF tells whether the browser can decode the format
+  const probe = new Image();
+  probe.onload = () => setup(probe.width > 0 ? AVIF_SEQ : WEBP_SEQ);
+  probe.onerror = () => setup(WEBP_SEQ);
+  probe.src = 'data:image/avif;base64,AAAAIGZ0eXBhdmlmAAAAAGF2aWZtaWYxbWlhZk1BMUIAAADybWV0YQAAAAAAAAAoaGRscgAAAAAAAAAAcGljdAAAAAAAAAAAAAAAAGxpYmF2aWYAAAAADnBpdG0AAAAAAAEAAAAeaWxvYwAAAABEAAABAAEAAAABAAABGgAAAB0AAAAoaWluZgAAAAAAAQAAABppbmZlAgAAAAABAABhdjAxQ29sb3IAAAAAamlwcnAAAABLaXBjbwAAABRpc3BlAAAAAAAAAAIAAAACAAAAEHBpeGkAAAAAAwgICAAAAAxhdjFDgQ0MAAAAABNjb2xybmNseAACAAIAAYAAAAAXaXBtYQAAAAAAAAABAAEEAQKDBAAAACVtZGF0EgAKCBgANogQEAwgMg8f8D///8WfhwB8+ErK42A=';
+  if (!AVIF_SEQ.ext || AVIF_SEQ.ext !== '.avif') setup(AVIF_SEQ);   // config without AVIF: start at once
   const rest = () => setTimeout(() => { phase = 1; next = 0; pump(); }, 400);
   if (document.readyState === 'complete') rest(); else addEventListener('load', rest, { once: true });
   setTimeout(show, 5000);   // never keep the page behind the loader
