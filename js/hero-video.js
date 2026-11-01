@@ -64,22 +64,37 @@
     if (loader) setTimeout(() => loader.remove(), Math.max(0, 2100 - (performance.now() - t0)) + 1500);
     dirty = true;
   };
-  const order = [], seen = new Uint8Array(N);
+  // phase 0 (before the page has loaded): only every 16th frame — enough to scrub the whole walk.
+  // phase 1 (after window load): the rest, a few at a time, frames around the current scroll position first,
+  // so the tab stops "loading" quickly and scrolling never competes with a flood of requests.
+  const order = [], seen = new Uint8Array(N), req = new Uint8Array(N);
   [16, 8, 4, 2, 1].forEach(step => { for (let i = 0; i < N; i += step) if (!seen[i]) { seen[i] = 1; order.push(i); } });
   if (!seen[N - 1]) order.splice(1, 0, N - 1);
-  let firstPass = Math.ceil(N / 16), inFlight = 0, next = 0;
-  const firstTotal = firstPass;
+  const isFirst = i => i % 16 === 0 || i === N - 1;
+  const firstTotal = order.filter(isFirst).length;
+  let firstPass = firstTotal, inFlight = 0, next = 0, phase = 0;
+  function pick() {
+    if (phase === 0) { while (next < order.length && (req[order[next]] || !isFirst(order[next]))) next++; return next < order.length && isFirst(order[next]) ? order[next] : -1; }
+    for (let d = 0; d <= 60; d++) {        // nearest missing frame around where the visitor is
+      if (curIdx + d < N && !req[curIdx + d]) return curIdx + d;
+      if (curIdx - d >= 0 && !req[curIdx - d]) return curIdx - d;
+    }
+    while (next < order.length && req[order[next]]) next++;
+    return next < order.length ? order[next] : -1;
+  }
   function pump() {
-    while (inFlight < 8 && next < order.length) {
-      const i = order[next++], im = new Image();
-      inFlight++;
-      im.decoding = 'async';
+    const limit = phase === 0 ? 8 : 3;
+    while (inFlight < limit) {
+      const i = pick(); if (i < 0) return;
+      const im = new Image();
+      req[i] = 1; inFlight++;
+      im.decoding = 'async';   // decoded only when a frame is actually drawn
       im.onload = () => {
-        // decode() is only a hint (some engines never settle it), so it is not awaited
-        if (im.decode) im.decode().catch(() => {});
         ok[i] = 1; inFlight--;
-        if (loader) loader.style.setProperty('--p', Math.min(1, (firstTotal - firstPass + 1) / firstTotal).toFixed(3));
-        if (--firstPass <= 0) show();
+        if (isFirst(i)) {
+          if (loader) loader.style.setProperty('--p', Math.min(1, (firstTotal - firstPass + 1) / firstTotal).toFixed(3));
+          if (--firstPass <= 0) show();
+        }
         if (Math.abs(i - curIdx) < 20) dirty = true;
         pump();
       };
@@ -89,6 +104,8 @@
     }
   }
   pump();
+  const rest = () => setTimeout(() => { phase = 1; next = 0; pump(); }, 400);
+  if (document.readyState === 'complete') rest(); else addEventListener('load', rest, { once: true });
   setTimeout(show, 5000);   // never keep the page behind the loader
   function nearest(i) {     // closest frame already in memory
     for (let d = 0; d < N; d++) {
