@@ -42,7 +42,7 @@ window.PROJECTS = [
     p.shots = (G[p.id] || []).map(s => Object.assign({ src: `media/p/${p.id}/${s.f}.webp`, thumb: `media/p/${p.id}/t/${s.f}.webp` }, s));
     if (!p.cover && p.shots.length) p.cover = (p.shots.find(s => s.w > s.h) || p.shots[0]).f;
     if (!p.preview.length && p.cover) p.preview.push(p.cover);
-    p.videos = (p.videos || []).map(v => Object.assign({ src: `media/v/${v.id}.mp4`, poster: `media/v/${v.id}.jpg`, project: p.id }, v));
+    p.videos = (p.videos || []).map(v => Object.assign({ src: `media/v/${v.id}.mp4`, poster: `media/v/${v.id}.webp`, project: p.id }, v));
     const extra = p.shots.map(s => s.f).filter(f => !p.preview.includes(f));
     while (p.preview.length < 6 && extra.length) p.preview.push(extra.splice(Math.floor(extra.length / 2), 1)[0]);
   });
@@ -52,4 +52,4 @@ window.VIDEOS = [
   { id: 'greek-tour', t: 'Греческий дом', d: 'Обзор реализованного дома', project: 'greek' },
   { id: 'neo-plan', t: 'Неоклассика', d: 'От планировки до готовой квартиры', project: 'neoclassic' },
   { id: 'neo-tour', t: 'Неоклассика', d: 'Обзор квартиры', project: 'neoclassic' }
-].map(v => Object.assign({ src: `media/v/${v.id}.mp4`, poster: `media/v/${v.id}.jpg` }, v));
+].map(v => Object.assign({ src: `media/v/${v.id}.mp4`, poster: `media/v/${v.id}.webp` }, v));

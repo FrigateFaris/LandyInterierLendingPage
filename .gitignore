@@ -1,24 +1,3 @@
-# earlier hero experiments and their tooling (not used by the site)
-hero-graphite.html
-hero-hotel.html
-hero-house.html
-hero-house-video.html
-hero-neoclassic.html
-build.py
-render_video.py
-gen_ai_walk.sh
-track_hotspots.py
-js/hero.js
-js/apartment-spots.js
-upscale-compare.jpg
-media/house/
-media/house.zip
-media/hotel/
-media/graphite/
-media/neoclassic/
-media/wokebowl/
-# build inputs / sources (the site uses media/p, media/v and the frame sequences)
-media/greek-stills/
-media/apartment/*.mp4
-media/apartment/poster.jpg
+# temporary files of the build scripts
+media/apartment/*.mkv
 __pycache__/

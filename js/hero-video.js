@@ -84,7 +84,7 @@
         pump();
       };
       im.onerror = () => { inFlight--; pump(); };
-      im.src = SEQ.dir + 'f' + String(i + 1).padStart(4, '0') + '.jpg';
+      im.src = SEQ.dir + 'f' + String(i + 1).padStart(4, '0') + (SEQ.ext || '.jpg');
       imgs[i] = im;
     }
   }
