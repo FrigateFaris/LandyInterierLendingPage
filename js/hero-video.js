@@ -51,11 +51,7 @@
   }
 
   /* ---------- frames: coarse pass first (every 16th), then refined, so the walk is usable at once ---------- */
-  // AVIF where the browser has it (about half the size of WebP at the same quality), WebP otherwise
-  const mobileSeq = innerWidth < 900;
-  const AVIF_SEQ = (mobileSeq && CFG.framesMobile) || CFG.frames;
-  const WEBP_SEQ = (mobileSeq && CFG.fallbackMobile) || CFG.fallback || AVIF_SEQ;
-  let SEQ = AVIF_SEQ, N = SEQ.count;
+  let SEQ = (innerWidth < 900 && CFG.framesMobile) || CFG.frames, N = SEQ.count;
   let imgs = new Array(N), ok = new Uint8Array(N);
   let shown = false, dirty = true, curIdx = 0;
   const t0 = performance.now();
@@ -114,12 +110,7 @@
       imgs[i] = im;
     }
   }
-  // a 1x1 AVIF tells whether the browser can decode the format
-  const probe = new Image();
-  probe.onload = () => setup(probe.width > 0 ? AVIF_SEQ : WEBP_SEQ);
-  probe.onerror = () => setup(WEBP_SEQ);
-  probe.src = 'data:image/avif;base64,AAAAIGZ0eXBhdmlmAAAAAGF2aWZtaWYxbWlhZk1BMUIAAADybWV0YQAAAAAAAAAoaGRscgAAAAAAAAAAcGljdAAAAAAAAAAAAAAAAGxpYmF2aWYAAAAADnBpdG0AAAAAAAEAAAAeaWxvYwAAAABEAAABAAEAAAABAAABGgAAAB0AAAAoaWluZgAAAAAAAQAAABppbmZlAgAAAAABAABhdjAxQ29sb3IAAAAAamlwcnAAAABLaXBjbwAAABRpc3BlAAAAAAAAAAIAAAACAAAAEHBpeGkAAAAAAwgICAAAAAxhdjFDgQ0MAAAAABNjb2xybmNseAACAAIAAYAAAAAXaXBtYQAAAAAAAAABAAEEAQKDBAAAACVtZGF0EgAKCBgANogQEAwgMg8f8D///8WfhwB8+ErK42A=';
-  if (!AVIF_SEQ.ext || AVIF_SEQ.ext !== '.avif') setup(AVIF_SEQ);   // config without AVIF: start at once
+  setup(SEQ);
   const rest = () => setTimeout(() => { phase = 1; next = 0; pump(); }, 400);
   if (document.readyState === 'complete') rest(); else addEventListener('load', rest, { once: true });
   setTimeout(show, 5000);   // never keep the page behind the loader
