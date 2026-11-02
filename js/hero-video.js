@@ -188,7 +188,7 @@
   /* ---------- drawing ---------- */
   let vw = innerWidth, vh = innerHeight, dpr = 1;
   function resize() {
-    vw = innerWidth; vh = innerHeight; dpr = Math.min(devicePixelRatio || 1, vw < 900 ? 2 : 1.5);   // phones: portrait frames are 1080 px tall
+    vw = innerWidth; vh = innerHeight; dpr = Math.min(devicePixelRatio || 1, vw < 900 ? 1.3 : 1.5);   // phones: 1.3 already matches the 1080 px tall portrait frames, more only costs paint time
     canvas.width = Math.round(vw * dpr); canvas.height = Math.round(vh * dpr);
     dirty = true;
   }
