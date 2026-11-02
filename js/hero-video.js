@@ -56,7 +56,8 @@
   let SEQ = (innerWidth < 900 && CFG.framesMobile) || CFG.frames, N = SEQ.count;
   let imgs = new Array(N), ok = new Uint8Array(N);
   let shown = false, dirty = true, curIdx = 0;
-  const t0 = performance.now(), MAX_WAIT = 15000;
+  // phones open once the coarse part of the walk is in (touch scrolling is slower, the rest keeps up in the background)
+  const t0 = performance.now(), MAX_WAIT = SEQ.maxWait || 15000, OPEN_AT = SEQ.openAt || 1;
   const pct = loader && loader.querySelector('.ld-pct');
   const show = () => {
     if (shown) return; shown = true;
@@ -84,10 +85,10 @@
     inFlight--; done++;
     if (loaded) { ok[i] = 1; if (Math.abs(i - curIdx) < 20) dirty = true; }
     if (!shown) {
-      const k = done / N;
+      const k = Math.min(1, done / (N * OPEN_AT));
       if (loader) loader.style.setProperty('--p', k.toFixed(3));
       if (pct) pct.textContent = Math.round(k * 100) + '%';
-      if (done >= N) show();
+      if (k >= 1) show();
     }
     pump();
   }
@@ -108,19 +109,19 @@
   // hundreds, and the percent follows the real bytes received. Opened from disk (file://) fetch is not allowed,
   // so frames are read one by one (from a local disk that takes about a second anyway).
   const PACK = /^https?:/.test(location.protocol) && window.FRAME_PACKS && window.FRAME_PACKS[SEQ.dir];
-  if (PACK && window.fetch && window.ReadableStream) loadPacks(PACK); else pump();
-  setTimeout(show, MAX_WAIT);   // never keep the page behind the loader for too long
+  setTimeout(show, MAX_WAIT);   // never keep the page behind the loader for too long (armed before anything can fail)
+  try { if (PACK && window.fetch && window.ReadableStream) loadPacks(PACK); else pump(); } catch (e) { pump(); }
 
   function loadPacks(P) {
     let got = 0, nextPack = 0;
     P.packs.forEach(pk => pk.frames.forEach(([i]) => { req[i] = 1; }));   // the per-frame loader stays out of the way
     const progress = () => {
       if (shown) return;
-      const k = Math.min(1, got / P.total);
+      const k = Math.min(1, got / (P.total * OPEN_AT));
       if (loader) loader.style.setProperty('--p', k.toFixed(3));
       if (pct) pct.textContent = Math.floor(k * 100) + '%';
     };
-    const frameReady = () => { if (++done >= N) show(); };   // shared with the per-frame loader
+    const frameReady = () => { if (++done >= N * OPEN_AT) show(); };   // shared with the per-frame loader
     async function getPack(pk) {
       try {
         const res = await fetch(pk.file); if (!res.ok) throw 0;
