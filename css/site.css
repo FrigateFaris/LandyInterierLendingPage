@@ -450,3 +450,9 @@ html.lock { overflow: hidden; }
 .foot-arch { position: absolute; right: -6vw; bottom: -22vw; width: 44vw; height: auto; color: #E9E9E8; opacity: .05; pointer-events: none; }
 .foot-top, .foot-word, .foot-bot { position: relative; z-index: 1; }
 @media (max-width: 900px) { .foot-arch { width: 80vw; } }
+
+/* narrow laptops: the centred menu would run into the right-hand buttons, so it goes back into the row */
+@media (max-width: 1260px) and (min-width: 901px) {
+  .nav { position: static; transform: none; gap: 18px; }
+  .theme-t span { display: none; }
+}

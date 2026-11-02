@@ -9,6 +9,7 @@
   const ctx = canvas.getContext('2d');
   const layer = document.querySelector('.spots');
   const intro = document.querySelector('.intro');
+  const introShade = document.querySelector('.intro-shade');
   const hint = document.querySelector('.hint');
   const outro = document.querySelector('.outro');
   const chapter = document.querySelector('.chapter');
@@ -187,7 +188,7 @@
   /* ---------- drawing ---------- */
   let vw = innerWidth, vh = innerHeight, dpr = 1;
   function resize() {
-    vw = innerWidth; vh = innerHeight; dpr = Math.min(devicePixelRatio || 1, 1.5);
+    vw = innerWidth; vh = innerHeight; dpr = Math.min(devicePixelRatio || 1, vw < 900 ? 2 : 1.5);   // phones: portrait frames are 1080 px tall
     canvas.width = Math.round(vw * dpr); canvas.height = Math.round(vh * dpr);
     dirty = true;
   }
@@ -242,6 +243,7 @@
     setChapter(ci);
     const introOut = sstep(0.05, 0.9, t);
     intro.style.opacity = (1 - introOut).toFixed(3);
+    introShade.style.opacity = (1 - introOut).toFixed(3);   // the dark backing leaves together with the opening text
     intro.style.transform = `translate3d(0,${(-introOut * 60).toFixed(1)}px,0)`;
     intro.style.visibility = introOut >= 1 ? 'hidden' : 'visible';
     hint.style.opacity = (1 - sstep(0.02, 0.3, t)).toFixed(3);
