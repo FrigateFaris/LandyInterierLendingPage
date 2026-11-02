@@ -32,6 +32,7 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
 @keyframes ldBar { to { transform: none; } }
 .ld-line { width: 120px; height: 1px; background: rgba(233,233,232,.14); overflow: hidden; }
 .ld-line i { display: block; height: 100%; background: var(--sand-2); transform: scaleX(var(--p, 0)); transform-origin: 0 50%; transition: transform .4s ease; }
+.ld-pct { margin-top: -14px; font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 10px; letter-spacing: .14em; color: rgba(233,233,232,.6); font-variant-numeric: tabular-nums; }
 .ld-t { font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: rgba(233,233,232,.45);
   opacity: 0; animation: ldIn .8s ease 1.4s forwards; }
 @keyframes ldIn { to { opacity: 1; } }

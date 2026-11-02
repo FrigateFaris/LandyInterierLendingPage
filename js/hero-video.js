@@ -50,37 +50,29 @@
     return (cum[i] + (cum[j] - cum[i]) * (x - i)) * DUR;
   }
 
-  /* ---------- frames: coarse pass first (every 16th), then refined, so the walk is usable at once ---------- */
+  /* ---------- frames: the loader stays up until the whole walk is in memory (so the very first scroll is as smooth
+     as any later one), loading coarse-to-fine: every 16th frame, then every 8th, ... After 15 s the page opens
+     anyway and the rest keeps loading, frames where the visitor is heading first. ---------- */
   let SEQ = (innerWidth < 900 && CFG.framesMobile) || CFG.frames, N = SEQ.count;
   let imgs = new Array(N), ok = new Uint8Array(N);
   let shown = false, dirty = true, curIdx = 0;
-  const t0 = performance.now();
+  const t0 = performance.now(), MAX_WAIT = 15000;
+  const pct = loader && loader.querySelector('.ld-pct');
   const show = () => {
     if (shown) return; shown = true;
+    phase = 1; pump();
     if (loader) loader.style.setProperty('--p', 1);
     // let the sign finish drawing before the curtain lifts
     setTimeout(() => document.documentElement.classList.add('ready'), Math.max(0, 2100 - (performance.now() - t0)));
     if (loader) setTimeout(() => loader.remove(), Math.max(0, 2100 - (performance.now() - t0)) + 1500);
     dirty = true;
   };
-  // phase 0 (before the page has loaded): only every 16th frame — enough to scrub the whole walk.
-  // phase 1 (after window load): the rest, a few at a time, frames around the current scroll position first,
-  // so the tab stops "loading" quickly and scrolling never competes with a flood of requests.
-  let order = [], req = new Uint8Array(N), firstTotal = 0, firstPass = 0, inFlight = 0, next = 0, phase = 0, started = false;
-  const isFirst = i => i % 16 === 0 || i === N - 1;
-  function setup(seq) {
-    if (started) return;
-    SEQ = seq; N = seq.count;
-    imgs = new Array(N); ok = new Uint8Array(N); req = new Uint8Array(N); order = [];
-    const seen = new Uint8Array(N);
-    [16, 8, 4, 2, 1].forEach(step => { for (let i = 0; i < N; i += step) if (!seen[i]) { seen[i] = 1; order.push(i); } });
-    if (!seen[N - 1]) order.splice(1, 0, N - 1);
-    firstTotal = firstPass = order.filter(isFirst).length;
-    next = 0; started = true; pump();
-  }
+  const order = [], seen = new Uint8Array(N), req = new Uint8Array(N);
+  [16, 8, 4, 2, 1].forEach(step => { for (let i = 0; i < N; i += step) if (!seen[i]) { seen[i] = 1; order.push(i); } });
+  if (!seen[N - 1]) order.splice(1, 0, N - 1);
+  let done = 0, inFlight = 0, next = 0, phase = 0;
   function pick() {
-    if (phase === 0) { while (next < order.length && (req[order[next]] || !isFirst(order[next]))) next++; return next < order.length && isFirst(order[next]) ? order[next] : -1; }
-    for (let d = 0; d <= 60; d++) {        // nearest missing frame where the visitor is heading, then behind
+    if (phase === 1) for (let d = 0; d <= 60; d++) {   // page already open: frames where the visitor is heading first
       const a = curIdx + dir * d, b = curIdx - dir * d;
       if (a >= 0 && a < N && !req[a]) return a;
       if (d < 20 && b >= 0 && b < N && !req[b]) return b;
@@ -88,32 +80,32 @@
     while (next < order.length && req[order[next]]) next++;
     return next < order.length ? order[next] : -1;
   }
+  function settle(i, loaded) {
+    inFlight--; done++;
+    if (loaded) { ok[i] = 1; if (Math.abs(i - curIdx) < 20) dirty = true; }
+    if (!shown) {
+      const k = done / N;
+      if (loader) loader.style.setProperty('--p', k.toFixed(3));
+      if (pct) pct.textContent = Math.round(k * 100) + '%';
+      if (done >= N) show();
+    }
+    pump();
+  }
   function pump() {
-    if (!started) return;
-    const limit = phase === 0 ? 8 : 6;
-    while (inFlight < limit) {
+    while (inFlight < 16) {
       const i = pick(); if (i < 0) return;
       const im = new Image();
       req[i] = 1; inFlight++;
       im.decoding = 'async';   // decoded only when a frame is actually drawn
-      im.onload = () => {
-        ok[i] = 1; inFlight--;
-        if (isFirst(i)) {
-          if (loader) loader.style.setProperty('--p', Math.min(1, (firstTotal - firstPass + 1) / firstTotal).toFixed(3));
-          if (--firstPass <= 0) show();
-        }
-        if (Math.abs(i - curIdx) < 20) dirty = true;
-        pump();
-      };
-      im.onerror = () => { inFlight--; pump(); };
+      im.onload = () => settle(i, true);
+      im.onerror = () => settle(i, false);
       im.src = SEQ.dir + 'f' + String(i + 1).padStart(4, '0') + (SEQ.ext || '.jpg');
       imgs[i] = im;
     }
   }
-  setup(SEQ);
-  const rest = () => setTimeout(() => { phase = 1; next = 0; pump(); }, 400);
-  if (document.readyState === 'complete') rest(); else addEventListener('load', rest, { once: true });
-  setTimeout(show, 5000);   // never keep the page behind the loader
+  let dir = 1, lastIdx = 0;   // scroll direction (used once the page is open)
+  pump();
+  setTimeout(show, MAX_WAIT);   // never keep the page behind the loader for too long
   function nearest(i) {     // closest frame already in memory
     for (let d = 0; d < N; d++) {
       if (i - d >= 0 && ok[i - d]) return i - d;
@@ -121,8 +113,6 @@
     }
     return -1;
   }
-
-  let dir = 1, lastIdx = 0;   // scroll direction: the background loader fetches frames ahead first
 
   /* ---------- scene titles: on arrival in each zone a big room title appears at the side
      (sides alternate), then leaves before the next zone; every line is scrubbed by scroll ---------- */
