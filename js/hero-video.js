@@ -104,8 +104,45 @@
     }
   }
   let dir = 1, lastIdx = 0;   // scroll direction (used once the page is open)
-  pump();
+  // Served over http(s): the frames come glued into a few pack files (js/frame-packs.js) — 8 downloads instead of
+  // hundreds, and the percent follows the real bytes received. Opened from disk (file://) fetch is not allowed,
+  // so frames are read one by one (from a local disk that takes about a second anyway).
+  const PACK = /^https?:/.test(location.protocol) && window.FRAME_PACKS && window.FRAME_PACKS[SEQ.dir];
+  if (PACK && window.fetch && window.ReadableStream) loadPacks(PACK); else pump();
   setTimeout(show, MAX_WAIT);   // never keep the page behind the loader for too long
+
+  function loadPacks(P) {
+    let got = 0, nextPack = 0;
+    P.packs.forEach(pk => pk.frames.forEach(([i]) => { req[i] = 1; }));   // the per-frame loader stays out of the way
+    const progress = () => {
+      if (shown) return;
+      const k = Math.min(1, got / P.total);
+      if (loader) loader.style.setProperty('--p', k.toFixed(3));
+      if (pct) pct.textContent = Math.floor(k * 100) + '%';
+    };
+    const frameReady = () => { if (++done >= N) show(); };   // shared with the per-frame loader
+    async function getPack(pk) {
+      try {
+        const res = await fetch(pk.file); if (!res.ok) throw 0;
+        const reader = res.body.getReader(), parts = [];
+        for (;;) { const { done: end, value } = await reader.read(); if (end) break; parts.push(value); got += value.length; progress(); }
+        const blob = new Blob(parts);
+        pk.frames.forEach(([i, off, len]) => {
+          const im = new Image();
+          im.decoding = 'async';
+          im.onload = () => { ok[i] = 1; if (Math.abs(i - curIdx) < 20) dirty = true; frameReady(); };
+          im.onerror = frameReady;
+          im.src = URL.createObjectURL(blob.slice(off, off + len, 'image/webp'));
+          imgs[i] = im;
+        });
+      } catch (e) {   // a pack failed: hand its frames back to the per-frame loader
+        pk.frames.forEach(([i]) => { req[i] = 0; }); got += pk.bytes; progress(); next = 0; pump();
+      }
+      if (nextPack < P.packs.length) getPack(P.packs[nextPack++]);
+    }
+    // three packs at a time: the coarse frames (first pack) arrive first, the rest fill in
+    for (let k = 0; k < 3 && nextPack < P.packs.length; k++) getPack(P.packs[nextPack++]);
+  }
   function nearest(i) {     // closest frame already in memory
     for (let d = 0; d < N; d++) {
       if (i - d >= 0 && ok[i - d]) return i - d;
