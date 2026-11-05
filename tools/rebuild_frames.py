@@ -21,6 +21,8 @@ SETS = {
 PAN = [(0, .5), (0.9, .5), (1.4, .32), (2.0, .32), (2.45, .72), (2.9, .72), (3.2, .7), (3.5, .66), (3.9, .3), (4.2, .28),
        (4.7, .78), (5.1, .83), (5.4, .6), (5.7, .5), (8.3, .5), (8.9, .62), (9.6, .62)]
 MW, MH, CW = 1920, 1080, 648
+# the walk ends where the stairs begin (6.59 s): frames kept per set (desktop 60 fps, phone every 2nd)
+KEEP = {'frames': 395, 'frames-m': 198}
 
 def pan_x(t):
     for (a, xa), (b, xb) in zip(PAN, PAN[1:]):
@@ -40,11 +42,11 @@ def cut_phone(master, out, q):
     size, i = MW * MH * 3, 0
     while True:
         buf = dec.stdout.read(size)
-        if len(buf) < size: break
+        if len(buf) < size or i >= KEEP['frames-m']: break
         x = pan_x(i * 2 / 60) * 3
         enc.stdin.write(b''.join(buf[r * MW * 3 + x: r * MW * 3 + x + CW * 3] for r in range(MH)))
         i += 1
-    enc.stdin.close(); enc.wait(); dec.wait()
+    dec.kill(); enc.stdin.close(); enc.wait(); dec.wait()
 
 def run(args):
     subprocess.run([FF, '-v', 'error', '-y'] + args, check=True)
@@ -61,7 +63,7 @@ def main(src, names):
         out = os.path.join(ROOT, name)
         shutil.rmtree(out, ignore_errors=True); os.makedirs(out)
         if vf is None: cut_phone(master, out, q)
-        else: run(['-i', master, '-vf', vf, '-vsync', '0', '-c:v', 'libwebp', '-quality', str(q), '-compression_level', '6', '-preset', 'photo',
+        else: run(['-i', master, '-vf', vf, '-vsync', '0', '-frames:v', str(KEEP[name]), '-c:v', 'libwebp', '-quality', str(q), '-compression_level', '6', '-preset', 'photo',
                  os.path.join(out, 'f%04d.webp')])
         files = glob.glob(os.path.join(out, '*.webp'))
         print(name, len(files), round(sum(map(os.path.getsize, files)) / 1e6, 1), 'MB')

@@ -1,4 +1,4 @@
-/* Home page below the hero: statement, works index, archive field, services, process, brief, faq, footer.
+/* Home page below the hero: statement, videos, brief, works index, studio shots, services, process, faq, footer.
    Plain JS, transform/opacity only; works from file:// (no fetch). Data: js/projects.js + js/gallery-data.js. */
 (function () {
   const $ = (s, r = document) => r.querySelector(s);
@@ -16,9 +16,7 @@
     { t: 'Комплектация', img: 'media/p/hotel/052.webp', cap: 'HTL · номер', d: 'Подбираем и заказываем мебель, свет и отделку в рамках согласованной сметы.',
       li: ['Смета до закупок', 'Проверенные поставщики', 'Контроль поставок'] },
     { t: 'Авторский надзор', img: 'media/p/neoclassic/013.webp', cap: 'NEO · реализованный объект', d: 'Выезжаем на объект и следим, чтобы ремонт шёл строго по проекту.',
-      li: ['Выезды на объект', 'Решения по ходу стройки', 'Приёмка этапов'] },
-    { t: 'Ремонт под ключ', img: 'media/p/neoclassic/019.webp', cap: 'NEO · ванная', d: 'Одна команда и один договор — от черновой отделки до декора.',
-      li: ['Фотоотчёты по этапам', 'Закупки и логистика', 'Финальная расстановка'] }
+      li: ['Выезды на объект', 'Решения по ходу стройки', 'Приёмка этапов'] }
   ];
   const STEPS = [
     { t: 'Знакомство и замер', img: 'media/steps/measure.webp', pos: '50% 30%', d: 'Встречаемся на объекте, обсуждаем образ жизни, привычки и бюджет. Делаем точные обмеры.',
@@ -28,18 +26,15 @@
     { t: 'Концепция и 3D', img: 'media/p/house/014.webp', pos: '50% 50%', d: 'Подбираем стиль, материалы и свет, показываем каждую комнату на визуализациях.',
       r: ['Визуализации всех помещений', 'Подборка материалов'], you: 'Согласовать или дать правки' },
     { t: 'Рабочие чертежи', img: 'media/steps/drawings.webp', pos: '50% 40%', d: 'Готовим документацию, по которой работают строители.',
-      r: ['Альбом чертежей: стены, электрика, сантехника, потолки, полы', 'Ведомости отделки'], you: 'Ничего — работаем мы' },
+      r: ['Альбом чертежей', 'Ведомости отделки'], you: 'Ничего — работаем мы' },
     { t: 'Комплектация', img: 'media/p/neoclassic/018.webp', pos: '50% 40%', d: 'Считаем смету, подбираем и заказываем мебель, свет и отделку.',
       r: ['Смета', 'График поставок'], you: 'Утвердить смету' },
-    { t: 'Реализация', img: 'media/p/neoclassic/013.webp', pos: '50% 50%', d: 'Ведём авторский надзор или делаем ремонт под ключ — до финальной расстановки декора.',
+    { t: 'Реализация', img: 'media/p/neoclassic/013.webp', pos: '50% 50%', d: 'Ведём авторский надзор: выезжаем на объект и следим, чтобы ремонт шёл строго по проекту.',
       r: ['Готовый интерьер, как на визуализациях'], you: 'Принимать этапы работ' }
   ];
-  const MOODS = [
-    { v: 'Светлый и тёплый', p: 'house', f: '014' },
-    { v: 'Тёмный, графит', p: 'graphite', f: '003' },
-    { v: 'Неоклассика', p: 'neoclassic', f: '013' },
-    { v: 'Отельный, дерево', p: 'hotel', f: '052' }
-  ];
+  // studio shots block: a few of the best frames across the projects
+  const SHOTS = [['house', '014'], ['hotel', '004'], ['neoclassic', '013'], ['greek', '007'], ['terrace', '024'], ['grey', '001'],
+    ['graphite', '003'], ['wokebowl', '010'], ['terrace', '042'], ['hotel', '037'], ['neoclassic', '007'], ['house', '024']];
   const FAQ = [
     ['С чего начинается работа?', 'С консультации и выезда на объект: знакомимся, обсуждаем задачу и бюджет, делаем замеры. Затем фиксируем объём работ и сроки в договоре.'],
     ['Можно заказать только планировку или только визуализацию?', 'Да. Каждый этап можно взять отдельно — например, планировку для перепланировки или визуализации по готовому плану.'],
@@ -61,24 +56,17 @@
     g.innerHTML = '<i></i>'.repeat(12); el.prepend(g);
   });
 
-  /* ---------- statement pills ---------- */
-  $$('.st-pill').forEach(p => { p.style.backgroundImage = `url("${p.dataset.img}")`; });
-
   /* ---------- works index ---------- */
   const list = $('.wk-list');
   PJ.forEach((p, i) => {
     const a = document.createElement('a');
     a.className = 'wk rv'; a.href = `project.html?id=${p.id}`;
     a.dataset.cat = p.cat; a.dataset.done = p.status === 'Реализован' ? '1' : '';
-    // on hover the row opens and a strip of the project's photos rises out of it
-    const strip = p.preview.slice(0, 5).map(f => `<img src="media/p/${p.id}/t/${f}.webp" alt="" loading="lazy">`).join('');
-    a.innerHTML = `<span class="mono wk-n">${pad(i + 1)}</span>
-      <span class="wk-name"><b>${p.name}</b></span>
-      <span class="mono wk-type">${p.type}</span>
+    // every row shows its cover photo right away (phones and tablets have no hover)
+    a.innerHTML = `<span class="wk-card"><img src="media/p/${p.id}/t/${p.cover}.webp" alt="${p.name}" loading="lazy"></span>
+      <span class="wk-name"><b>${p.name}</b><span class="mono wk-type">${p.type}</span></span>
       <span class="wk-rooms">${p.rooms.slice(0, 4).join(', ')}${p.rooms.length > 4 ? '…' : ''}</span>
-      <span class="mono wk-st">${p.status}<em>${pad(p.shots.length, 3)} кадров</em></span>
-      <span class="wk-strip"><span class="wk-strip-in">${strip}<span class="mono wk-more">Смотреть проект →</span></span></span>
-      <span class="wk-card"><img src="media/p/${p.id}/t/${p.cover}.webp" alt="${p.name}" loading="lazy"></span>`;
+      <span class="mono wk-st">${p.status}<em>Смотреть →</em></span>`;
     list.appendChild(a); watch(a);
   });
   $('.filters').addEventListener('click', e => {
@@ -94,45 +82,19 @@
   });
 
   /* ---------- videos from the sites ---------- */
-  if (window.VideoCards) window.VideoCards.render($('.rl-row'), window.VIDEOS);
+  if (window.VideoCards) window.VideoCards.render($('.rl-row'), window.VIDEOS, { autoplay: true });
 
-  /* ---------- archive: a draggable field with every photo ---------- */
-  const field = $('.ar-field'), plane = $('.ar-plane');
-  const ALL = [];
-  PJ.forEach((p, pi) => p.shots.forEach((s, si) => ALL.push({ p, pi, s, si })));
-  // interleave projects so neighbours differ
-  const mixed = [];
-  for (let r = 0; ALL.some(x => !x.used); r++) PJ.forEach((p, pi) => { const x = ALL.find(y => y.pi === pi && !y.used); if (x) { x.used = 1; mixed.push(x); } });
-  $('.ar-count').textContent = `${pad(mixed.length, 3)} кадров · ${PJ.length} объектов`;
-  const COLS = innerWidth < 700 ? 9 : 16, CW = innerWidth < 700 ? 150 : 210, GAP = innerWidth < 700 ? 14 : 22;
-  const colH = new Array(COLS).fill(0).map((_, c) => (c % 2) * CW * 0.45);
-  mixed.forEach(x => {
-    const c = colH.indexOf(Math.min(...colH));
-    const h = Math.round(CW * x.s.h / x.s.w);
+  /* ---------- studio shots: grey until hovered, click opens the viewer ---------- */
+  const arGrid = $('.ar-grid');
+  SHOTS.forEach(([id, f]) => {
+    const pi = PJ.findIndex(p => p.id === id), p = PJ[pi], si = p ? p.shots.findIndex(x => x.f === f) : -1;
+    if (si < 0) return;
     const el = document.createElement('button');
-    el.type = 'button'; el.className = 'ar-item';
-    el.style.cssText = `left:${c * (CW + GAP)}px;top:${colH[c]}px;width:${CW}px;height:${h}px`;
-    el.innerHTML = `<img src="${x.s.thumb}" alt="${x.p.name}" loading="lazy"><span class="mono">${x.p.code}-${pad(x.si + 1, 3)}</span>`;
-    el.addEventListener('click', () => { if (!dragged) window.Viewer.open(x.pi, x.si); });
-    plane.appendChild(el);
-    colH[c] += h + GAP;
+    el.type = 'button'; el.className = 'ar-item rv';
+    el.innerHTML = `<img src="${p.shots[si].thumb}" alt="${p.name}" loading="lazy"><span class="mono">${p.name}</span>`;
+    el.addEventListener('click', () => window.Viewer.open(pi, si));
+    arGrid.appendChild(el); watch(el);
   });
-  const PW = COLS * (CW + GAP) - GAP, PH = Math.max(...colH);
-  plane.style.width = PW + 'px'; plane.style.height = PH + 'px';
-  let px = 0, py = 0, vx = 0, vy = 0, drag = null, dragged = false;
-  const limits = () => [Math.min(0, field.clientWidth - PW), Math.min(0, field.clientHeight - PH)];
-  (function center() { const [lx, ly] = limits(); px = lx / 2; py = ly / 3; })();
-  field.addEventListener('pointerdown', e => { drag = { x: e.clientX, y: e.clientY, px, py, t: performance.now() }; dragged = false; vx = vy = 0; field.classList.add('grab'); });
-  addEventListener('pointermove', e => {
-    if (!drag) return;
-    const dx = e.clientX - drag.x, dy = e.clientY - drag.y;
-    if (Math.abs(dx) + Math.abs(dy) > 6) dragged = true;
-    const nx = drag.px + dx, ny = drag.py + dy;
-    vx = nx - px; vy = ny - py; px = nx; py = ny;
-  });
-  addEventListener('pointerup', () => { if (!drag) return; drag = null; field.classList.remove('grab'); setTimeout(() => { dragged = false; }, 0); });
-  // touch: horizontal swipes pan the field, vertical ones scroll the page
-  field.style.touchAction = 'pan-y';
 
   /* ---------- services ---------- */
   const svList = $('.sv-list'), svImg = $('.sv-img'), svCap = $('.sv-cap');
@@ -155,26 +117,19 @@
   });
   svSet(0);
 
-  /* ---------- process: a plain table — step, what we do, what the client gets ---------- */
+  /* ---------- process: six compact cards — picture, step, what we do, what the client gets ---------- */
   const stList = $('.st-list');
   STEPS.forEach((s, i) => {
     const li = document.createElement('li');
     li.className = 'st rv';
-    li.innerHTML = `<div class="st-c1"><div class="st-t"><span class="mono">${pad(i + 1)}</span><b>${s.t}</b></div>
-        <div class="st-img"><img src="${s.img}" alt="${s.t}" loading="lazy" style="object-position:${s.pos}"></div></div>
-      <p class="st-c2">${s.d}<span class="st-you mono">От вас: ${s.you}</span></p>
-      <ul class="st-c3">${s.r.map(x => `<li>${x}</li>`).join('')}</ul>`;
+    li.innerHTML = `<div class="st-img"><img src="${s.img}" alt="${s.t}" loading="lazy" style="object-position:${s.pos}"></div>
+      <div class="st-t"><span class="mono">${pad(i + 1)}</span><b>${s.t}</b></div>
+      <p class="st-d">${s.d}</p>
+      <p class="st-r"><span class="mono">Результат</span>${s.r.join(' · ')}</p>`;
     stList.appendChild(li); watch(li);
   });
 
   /* ---------- brief ---------- */
-  const moods = $('.moods');
-  MOODS.forEach((m, i) => {
-    const b = document.createElement('button');
-    b.type = 'button'; b.className = i ? '' : 'on'; b.dataset.v = m.v;
-    b.innerHTML = `<img src="media/p/${m.p}/t/${m.f}.webp" alt="" loading="lazy"><span>${m.v}</span>`;
-    moods.appendChild(b);
-  });
   const bf = $('.bf'), range = $('.bf-range'), areaLbl = $('.bf-area'), rows = $('.sh-rows');
   const no = 'LI-' + pad(Math.floor(Math.random() * 9000) + 1000, 4);
   $('.sh-no').textContent = no;
@@ -215,7 +170,7 @@
     const area = +range.value;
     areaLbl.textContent = `${area} м²`;
     range.style.setProperty('--p', ((area - 30) / 570 * 100).toFixed(1) + '%');
-    const R = [['Объект', val('type')], ['Площадь', `${area} м²`], ['Помещения', val('rooms').join(', ') || '—'], ['Настроение', val('mood')], ['Формат', val('pack')]];
+    const R = [['Объект', val('type')], ['Площадь', `${area} м²`], ['Помещения', val('rooms').join(', ') || '—'], ['Формат', val('pack')]];
     rows.innerHTML = R.map(([k, v]) => `<div><dt class="mono">${k}</dt><dd>${v}</dd></div>`).join('');
     plan(val('rooms'), area);
   }
@@ -265,14 +220,6 @@
     const overDark = darks.some(d => { const r = d.getBoundingClientRect(); return r.top < 40 && r.bottom > 40; });
     top.classList.toggle('on-light', light() && walk.getBoundingClientRect().bottom < 40 && !overDark);
     top.classList.toggle('bg', walk.getBoundingClientRect().bottom < 40);
-    // archive: inertia + bounds
-    if (!drag) { px += vx; py += vy; vx *= 0.92; vy *= 0.92; }
-    const [lx, ly] = limits();
-    if (!drag) { px += (clamp(px, lx, 0) - px) * 0.2; py += (clamp(py, ly, 0) - py) * 0.2; }
-    // slow vertical parallax with page scroll
-    const fr = field.getBoundingClientRect();
-    const sp = clamp((vh - fr.top) / (vh + fr.height), 0, 1);
-    plane.style.transform = `translate3d(${px.toFixed(1)}px,${(py - sp * 120).toFixed(1)}px,0)`;
     requestAnimationFrame(frame);
   }
   requestAnimationFrame(frame);

@@ -1,4 +1,4 @@
-/* Vertical video cards (muted preview on hover) + a fullscreen player with sound. Used by index.html and project.html.
+/* Vertical video cards (muted preview on hover, or one always playing with autoplay) + a fullscreen player with sound. Used by index.html and project.html.
    VideoCards.render(container, list) — list items: { src, poster, t, d } */
 (function () {
   const fine = matchMedia('(hover: hover) and (pointer: fine)').matches;
@@ -25,7 +25,17 @@
   addEventListener('keydown', e => { if (e.key === 'Escape' && modal.classList.contains('open')) close(); });
 
   /* ---------- cards ---------- */
-  function render(box, list) {
+  // opts.autoplay: one card always plays muted while the row is on screen (the first by default, then the last hovered)
+  function render(box, list, opts = {}) {
+    const cards = [];
+    let cur = 0, visible = false;
+    const start = k => {
+      cur = k;
+      cards.forEach((c, j) => {
+        if (j === k && (visible || !opts.autoplay)) { if (!c.vid.src) c.vid.src = c.v.src; c.b.classList.add('live'); const p = c.vid.play(); if (p) p.catch(() => {}); }
+        else { c.b.classList.remove('live'); c.vid.pause(); }
+      });
+    };
     list.forEach((v, i) => {
       const b = document.createElement('button');
       b.type = 'button'; b.className = 'rl';
@@ -33,13 +43,18 @@
           <i class="rl-play" aria-hidden="true"></i></span>
         <span class="mono rl-k">${pad(i + 1)} · ${v.t}</span><span class="rl-d">${v.d}</span>`;
       const vid = b.querySelector('video');
+      cards.push({ b, vid, v });
       if (fine) {
-        b.addEventListener('mouseenter', () => { if (!vid.src) vid.src = v.src; b.classList.add('live'); const p = vid.play(); if (p) p.catch(() => {}); });
-        b.addEventListener('mouseleave', () => { b.classList.remove('live'); vid.pause(); });
+        b.addEventListener('mouseenter', () => start(i));
+        if (!opts.autoplay) b.addEventListener('mouseleave', () => { b.classList.remove('live'); vid.pause(); });
       }
       b.addEventListener('click', () => { vid.pause(); open(v); });
       box.appendChild(b);
     });
+    if (opts.autoplay && 'IntersectionObserver' in window) {
+      new IntersectionObserver(([e]) => { visible = e.isIntersecting; start(cur); }, { threshold: 0.25 }).observe(box);
+      modal.addEventListener('transitionend', () => { if (!modal.classList.contains('open')) start(cur); });
+    }
   }
   window.VideoCards = { render, open, close };
 })();

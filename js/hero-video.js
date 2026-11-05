@@ -247,7 +247,8 @@
     intro.style.transform = `translate3d(0,${(-introOut * 60).toFixed(1)}px,0)`;
     intro.style.visibility = introOut >= 1 ? 'hidden' : 'visible';
     hint.style.opacity = (1 - sstep(0.02, 0.3, t)).toFixed(3);
-    const outIn = sstep(DUR + 0.2, DUR + 0.75, t);
+    const OUT = CFG.outroAt || DUR + 0.2;   // the closing offer may come up while the camera is still moving
+    const outIn = sstep(OUT, OUT + 0.55, t);
     outro.style.opacity = outIn.toFixed(3);
     outro.style.transform = `translate3d(0,${((1 - outIn) * 40).toFixed(1)}px,0)`;
     outro.style.visibility = outIn > 0 ? 'visible' : 'hidden';
@@ -259,7 +260,7 @@
   /* ---------- smooth scroll -> time ---------- */
   function readT() {
     const top = walk.getBoundingClientRect().top + scrollY;
-    return clamp((scrollY - top) / (walk.offsetHeight - vh), 0, 1) * TOTAL;
+    return clamp((scrollY - top) / Math.max(1, walk.offsetHeight - vh), 0, 1) * TOTAL;   // max(): a page opened in a zero-height tab
   }
   function scrollToTime(t) {
     const top = walk.getBoundingClientRect().top + scrollY;
