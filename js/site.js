@@ -1,4 +1,4 @@
-/* Home page below the hero: statement, videos, brief, works index, studio shots, services, process, faq, footer.
+/* Home page below the hero: statement, videos, brief, works, studio shots field, services, rates, faq, footer.
    Plain JS, transform/opacity only; works from file:// (no fetch). Data: js/projects.js + js/gallery-data.js. */
 (function () {
   const $ = (s, r = document) => r.querySelector(s);
@@ -18,19 +18,25 @@
     { t: 'Авторский надзор', img: 'media/p/neoclassic/013.webp', cap: 'NEO · реализованный объект', d: 'Выезжаем на объект и следим, чтобы ремонт шёл строго по проекту.',
       li: ['Выезды на объект', 'Решения по ходу стройки', 'Приёмка этапов'] }
   ];
-  const STEPS = [
-    { t: 'Знакомство и замер', img: 'media/steps/measure.webp', pos: '50% 30%', d: 'Встречаемся на объекте, обсуждаем образ жизни, привычки и бюджет. Делаем точные обмеры.',
-      r: ['Обмерный план', 'Техническое задание'], you: 'Доступ на объект и ваши пожелания' },
-    { t: 'Планировка', img: 'media/steps/plan.webp', pos: '50% 45%', d: 'Предлагаем варианты: зоны, хранение, расстановка мебели, сценарии жизни.',
-      r: ['Варианты планировки', 'Расстановка мебели'], you: 'Выбрать вариант' },
-    { t: 'Концепция и 3D', img: 'media/p/house/014.webp', pos: '50% 50%', d: 'Подбираем стиль, материалы и свет, показываем каждую комнату на визуализациях.',
-      r: ['Визуализации всех помещений', 'Подборка материалов'], you: 'Согласовать или дать правки' },
-    { t: 'Рабочие чертежи', img: 'media/steps/drawings.webp', pos: '50% 40%', d: 'Готовим документацию, по которой работают строители.',
-      r: ['Альбом чертежей', 'Ведомости отделки'], you: 'Ничего — работаем мы' },
-    { t: 'Комплектация', img: 'media/p/neoclassic/018.webp', pos: '50% 40%', d: 'Считаем смету, подбираем и заказываем мебель, свет и отделку.',
-      r: ['Смета', 'График поставок'], you: 'Утвердить смету' },
-    { t: 'Реализация', img: 'media/p/neoclassic/013.webp', pos: '50% 50%', d: 'Ведём авторский надзор: выезжаем на объект и следим, чтобы ремонт шёл строго по проекту.',
-      r: ['Готовый интерьер, как на визуализациях'], you: 'Принимать этапы работ' }
+  // formats of work and prices, as on the studio's Taplink
+  const RATES = [
+    { n: 'Express', t: 'Быстрый старт: планировка и логика пространства', p: '18 $', u: 'за м²', time: '5 рабочих дней',
+      li: ['Консультация дизайнера', 'Обмерный план', 'Планировка с расстановкой мебели — до 3 вариантов', 'Планы демонтажа и монтажа стен'],
+      demo: 'https://drive.google.com/file/d/1c12Zp0wg8CcyijvzHS7udI3WsyM8XWum/view?usp=drive_link' },
+    { n: 'Express Plus', t: 'Планировка и сразу инженерная база для ремонта', p: '23 $', u: 'за м²', time: '10 рабочих дней',
+      li: ['Всё из Express', 'Сантехника с привязками', 'Потолки, освещение и группы света', 'Розетки, раскладка полов, тёплый пол'],
+      demo: 'https://drive.google.com/file/d/1tlzy2k1JXFN0olQhdafcy2uowcNCNESv/view?usp=drive_link' },
+    { n: 'Full', t: 'Полный дизайн-проект: интерьер виден до ремонта', p: '38 $', u: 'за м²', time: 'от 25 рабочих дней',
+      li: ['Всё из Express Plus', 'Развёртки помещений', 'Монтажные узлы', 'Фотореалистичные 3D-визуализации'],
+      demo: 'https://drive.google.com/file/d/1N86WTfTj-cGIpifi5gFNE9TfHeTTmnMY/view?usp=sharing', main: true },
+    { n: 'Visual', t: 'Реалистичные изображения будущего интерьера', p: '23 $', u: 'за м²', time: 'по объёму проекта',
+      li: ['3D-визуализации ключевых помещений', 'Свет, текстуры, материалы и мебель', 'Предметы реальных брендов или аналоги', '2 раунда правок'] }
+  ];
+  const MORE = [
+    { n: 'Mix', t: 'Свой формат для каждого помещения: например, гостиная — Visual, санузел — Express', p: 'Индивидуально',
+      demo: 'https://drive.google.com/file/d/1h7wZVIE7nWslDr-RyQ8LQjOae4nZ5_Cj/view?usp=drive_link' },
+    { n: 'Авторский надзор', t: 'До 6 выездов в месяц, контроль работ, материалов и расстановки мебели', p: 'Индивидуально' },
+    { n: 'Выездная консультация', t: 'Планировка, стиль, материалы, мебель или разбор готового проекта', p: '500 000 сум', u: 'в час · Ташкент' }
   ];
   const FAQ = [
     ['С чего начинается работа?', 'С консультации и выезда на объект: знакомимся, обсуждаем задачу и бюджет, делаем замеры. Затем фиксируем объём работ и сроки в договоре.'],
@@ -48,7 +54,7 @@
   $$('.rv, .st-line, .sec-head, .meta-row').forEach(watch);
 
   /* ---------- drafting lines: only where the page is about drawings ---------- */
-  $$('#about, #process, #price').forEach(el => {
+  $$('#about, #price').forEach(el => {
     const g = document.createElement('div'); g.className = 'gridlines'; g.setAttribute('aria-hidden', 'true');
     g.innerHTML = '<i></i>'.repeat(12); el.prepend(g);
   });
@@ -77,35 +83,42 @@
   /* ---------- videos from the sites ---------- */
   if (window.VideoCards) window.VideoCards.render($('.rl-row'), window.VIDEOS, { autoplay: true });
 
-  /* ---------- studio shots: a collage of a few frames from every project; it sits still (no dragging),
-     only drifts a little with the page. Grey until hovered, click opens the viewer. ---------- */
+  /* ---------- archive: a draggable field with every photo ---------- */
   const field = $('.ar-field'), plane = $('.ar-plane');
-  const PER = 4;   // frames taken from each project
-  const picks = [];
-  for (let r = 0; r < PER; r++) PJ.forEach((p, pi) => { if (p.shots[r]) picks.push({ p, pi, si: r }); });
-  function collage() {
-    const W = field.clientWidth, COLS = W < 700 ? 3 : 6, GAP = W < 700 ? 8 : 16;
-    const CW = (W - GAP * (COLS - 1)) / COLS;
-    // staggered columns like a pin board; every column starts above the frame (and ends below it) by more than the drift
-    const colH = new Array(COLS).fill(0).map((_, c) => -24 - (c % 2) * CW * 0.4);
-    plane.innerHTML = '';
-    picks.forEach(x => {
-      const c = colH.indexOf(Math.min(...colH)), s = x.p.shots[x.si];
-      const h = Math.round(CW * s.h / s.w);
-      const el = document.createElement('button');
-      el.type = 'button'; el.className = 'ar-item';
-      el.style.cssText = `left:${(c * (CW + GAP)).toFixed(1)}px;top:${colH[c]}px;width:${CW.toFixed(1)}px;height:${h}px`;
-      el.innerHTML = `<img src="${s.thumb}" alt="${x.p.name}" loading="lazy"><span class="mono">${x.p.name}</span>`;
-      el.addEventListener('click', () => window.Viewer.open(x.pi, x.si));
-      plane.appendChild(el);
-      colH[c] += h + GAP;
-    });
-    // the field is as tall as the shortest column, so it ends on a full row of pictures with no gaps
-    field.style.height = Math.min(...colH) - GAP - 24 + 'px';
-  }
-  collage();
-  let cw = innerWidth;
-  addEventListener('resize', () => { if (innerWidth !== cw) { cw = innerWidth; collage(); } });
+  const ALL = [];
+  PJ.forEach((p, pi) => p.shots.forEach((s, si) => ALL.push({ p, pi, s, si })));
+  // interleave projects so neighbours differ
+  const mixed = [];
+  for (let r = 0; ALL.some(x => !x.used); r++) PJ.forEach((p, pi) => { const x = ALL.find(y => y.pi === pi && !y.used); if (x) { x.used = 1; mixed.push(x); } });
+  const COLS = innerWidth < 700 ? 9 : 16, CW = innerWidth < 700 ? 150 : 210, GAP = innerWidth < 700 ? 14 : 22;
+  const colH = new Array(COLS).fill(0).map((_, c) => (c % 2) * CW * 0.45);
+  mixed.forEach(x => {
+    const c = colH.indexOf(Math.min(...colH));
+    const h = Math.round(CW * x.s.h / x.s.w);
+    const el = document.createElement('button');
+    el.type = 'button'; el.className = 'ar-item';
+    el.style.cssText = `left:${c * (CW + GAP)}px;top:${colH[c]}px;width:${CW}px;height:${h}px`;
+    el.innerHTML = `<img src="${x.s.thumb}" alt="${x.p.name}" loading="lazy"><span class="mono">${x.p.name}</span>`;
+    el.addEventListener('click', () => { if (!dragged) window.Viewer.open(x.pi, x.si); });
+    plane.appendChild(el);
+    colH[c] += h + GAP;
+  });
+  const PW = COLS * (CW + GAP) - GAP, PH = Math.max(...colH);
+  plane.style.width = PW + 'px'; plane.style.height = PH + 'px';
+  let px = 0, py = 0, vx = 0, vy = 0, drag = null, dragged = false;
+  const limits = () => [Math.min(0, field.clientWidth - PW), Math.min(0, field.clientHeight - PH)];
+  (function center() { const [lx, ly] = limits(); px = lx / 2; py = ly / 3; })();
+  field.addEventListener('pointerdown', e => { drag = { x: e.clientX, y: e.clientY, px, py, t: performance.now() }; dragged = false; vx = vy = 0; field.classList.add('grab'); });
+  addEventListener('pointermove', e => {
+    if (!drag) return;
+    const dx = e.clientX - drag.x, dy = e.clientY - drag.y;
+    if (Math.abs(dx) + Math.abs(dy) > 6) dragged = true;
+    const nx = drag.px + dx, ny = drag.py + dy;
+    vx = nx - px; vy = ny - py; px = nx; py = ny;
+  });
+  addEventListener('pointerup', () => { if (!drag) return; drag = null; field.classList.remove('grab'); setTimeout(() => { dragged = false; }, 0); });
+  // touch: horizontal swipes pan the field, vertical ones scroll the page
+  field.style.touchAction = 'pan-y';
 
   /* ---------- services ---------- */
   const svList = $('.sv-list'), svImg = $('.sv-img'), svCap = $('.sv-cap');
@@ -128,13 +141,25 @@
   });
   svSet(0);
 
-  /* ---------- process: six steps in one row on a line — step, what we do, what the client gets ---------- */
-  const stList = $('.st-list');
-  STEPS.forEach((s, i) => {
-    const li = document.createElement('li');
-    li.className = 'st rv';
-    li.innerHTML = `<b class="st-t">${s.t}</b><p class="st-d">${s.d}</p><p class="st-r">${s.r.join(' · ')}</p>`;
-    stList.appendChild(li); watch(li);
+  /* ---------- rates: four main formats as cards, three more as rows ---------- */
+  const demo = u => u ? `<a class="mono rt-demo" href="${u}" target="_blank" rel="noopener">Смотреть образец ↗</a>` : '';
+  RATES.forEach(r => {
+    const el = document.createElement('article');
+    el.className = 'rt rv' + (r.main ? ' main' : '');
+    el.innerHTML = `<div class="rt-top"><h3 class="rt-n">${r.n}</h3><p class="rt-t">${r.t}</p></div>
+      <p class="rt-p"><b>${r.p}</b><span>${r.u}</span></p>
+      <p class="mono rt-time">${r.time}</p>
+      <ul class="rt-li">${r.li.map(x => `<li>${x}</li>`).join('')}</ul>
+      <div class="rt-act"><button class="btn${r.main ? ' solid' : ''}" type="button" data-lead="Тариф ${r.n}">Выбрать <i></i></button>${demo(r.demo)}</div>`;
+    $('.rt-list').appendChild(el); watch(el);
+  });
+  MORE.forEach(r => {
+    const el = document.createElement('div');
+    el.className = 'rt-row rv';
+    el.innerHTML = `<h3 class="rt-n">${r.n}</h3><p class="rt-t">${r.t}${r.demo ? ' ' + demo(r.demo) : ''}</p>
+      <p class="rt-p"><b>${r.p}</b>${r.u ? `<span>${r.u}</span>` : ''}</p>
+      <button class="btn" type="button" data-lead="${r.n}">Обсудить <i></i></button>`;
+    $('.rt-more').appendChild(el); watch(el);
   });
 
   /* ---------- brief ---------- */
@@ -228,8 +253,14 @@
     const overDark = darks.some(d => { const r = d.getBoundingClientRect(); return r.top < 40 && r.bottom > 40; });
     top.classList.toggle('on-light', light() && walk.getBoundingClientRect().bottom < 40 && !overDark);
     top.classList.toggle('bg', walk.getBoundingClientRect().bottom < 40);
+    // archive: inertia + bounds
+    if (!drag) { px += vx; py += vy; vx *= 0.92; vy *= 0.92; }
+    const [lx, ly] = limits();
+    if (!drag) { px += (clamp(px, lx, 0) - px) * 0.2; py += (clamp(py, ly, 0) - py) * 0.2; }
+    // slow vertical parallax with page scroll
     const fr = field.getBoundingClientRect();
-    if (fr.bottom > 0 && fr.top < vh) plane.style.transform = `translate3d(0,${(((fr.top + fr.height / 2) / vh - 0.5) * -40).toFixed(1)}px,0)`;
+    const sp = clamp((vh - fr.top) / (vh + fr.height), 0, 1);
+    plane.style.transform = `translate3d(${px.toFixed(1)}px,${(py - sp * 120).toFixed(1)}px,0)`;
     requestAnimationFrame(frame);
   }
   requestAnimationFrame(frame);

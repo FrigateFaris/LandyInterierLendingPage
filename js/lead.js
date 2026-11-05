@@ -4,7 +4,7 @@
 (function () {
   const $ = (s, r = document) => r.querySelector(s);
   const $$ = (s, r = document) => [...r.querySelectorAll(s)];
-  const INTEREST = ['Дизайн-проект', 'Ремонт под ключ', 'Консультация', 'Пока присматриваюсь'];
+  const INTEREST = ['Дизайн-проект', 'Авторский надзор', 'Консультация', 'Пока присматриваюсь'];
   const briefHref = $('#price') ? '#price' : 'index.html#price';
 
   const m = document.createElement('div');
@@ -26,6 +26,10 @@
   const form = $('.ld-form', m), ints = $('.ld-int', m);
   ints.addEventListener('click', e => { const b = e.target.closest('button'); if (b) $$('button', ints).forEach(x => x.classList.toggle('on', x === b)); });
   function open(pre) {
+    $$('button.extra', ints).forEach(x => x.remove());
+    if (pre && !$$('button', ints).some(x => x.textContent === pre)) {   // e.g. «Тариф Full»: shown as its own chip
+      const b = document.createElement('button'); b.type = 'button'; b.className = 'extra'; b.textContent = pre; ints.prepend(b);
+    }
     if (pre) $$('button', ints).forEach(x => x.classList.toggle('on', x.textContent === pre));
     form.classList.remove('sent');
     m.classList.add('open'); m.setAttribute('aria-hidden', 'false'); document.documentElement.classList.add('lock');
