@@ -8,6 +8,8 @@
   --fg-60: rgba(233,233,232,.6); --rule: rgba(233,233,232,.13); --accent: #C2A794; }
 html { background: var(--bg); }
 html { scroll-behavior: smooth; }
+/* nothing may push the page sideways on a phone (clip keeps the hero's sticky stage working) */
+html, body { overflow-x: clip; }
 html.lock { overflow: hidden; }
 .site { position: relative; z-index: 2; background: var(--bg); color: var(--fg); }
 .site { --gap: clamp(12px, 1.6vw, 24px); }
@@ -163,7 +165,7 @@ html.lock { overflow: hidden; }
 @media (max-width: 1100px) { .rt-list { grid-template-columns: repeat(2, 1fr); } }
 @media (max-width: 900px) {
   .rt-lead, .wk-lead { grid-column: 1 / -1; }
-  .rt-list { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; scroll-padding-left: var(--pad); scrollbar-width: none; margin: 0 calc(-1 * var(--pad)); padding: 0 var(--pad); }
+  .rt-list { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; scroll-padding-left: var(--pad); scrollbar-width: none; }   /* it is the .wrap itself: no negative margin */
   .rt-list::-webkit-scrollbar { display: none; }
   .rt { flex: 0 0 82vw; scroll-snap-align: start; }
   .rt-top { min-height: 0; }
@@ -311,6 +313,10 @@ html.lock { overflow: hidden; }
   .meta-row > * { grid-column: 1 / -1 !important; text-align: left !important; }
   .archive, .foot { --fade: 140px; }
   .ar-hint { grid-column: 1 / -1; }
+  /* works filters: one swipeable line instead of a row wider than the screen */
+  .seg.filters { max-width: 100%; overflow-x: auto; scrollbar-width: none; }
+  .seg.filters::-webkit-scrollbar { display: none; }
+  .seg.filters button { flex: none; }
   .ar-field { height: 70vh; }
   .sv-frame { position: relative; top: 0; margin-bottom: 20px; }
   .sv-img { aspect-ratio: 16 / 11; }
@@ -435,4 +441,21 @@ html.lock { overflow: hidden; }
 /* narrow laptops: the centred menu would run into the right-hand buttons, so it goes back into the row */
 @media (max-width: 1260px) and (min-width: 901px) {
   .nav { position: static; transform: none; gap: 18px; }
+}
+
+/* ---------- phones and tablets: no paint-heavy effects while scrolling ---------- */
+@media (hover: none), (max-width: 900px) {
+  .ar-field { -webkit-mask-image: none; mask-image: none; }
+  .ar-item img { filter: none; transition: none; }
+  .ar-plane, .bl-img, .bl-img img { will-change: auto; }
+  .bl-img { clip-path: none; }
+  .bl-img img { transform: none; }
+  .lead-fab, .wk-st { -webkit-backdrop-filter: none; backdrop-filter: none; background: rgba(15,12,9,.9); }
+}
+
+/* phones: the header already carries «Обсудить проект», so the floating button would only cover content;
+   the scroll label at the bottom of the hero ran into the opening buttons */
+@media (max-width: 900px) {
+  .lead-fab { display: none; }
+  .hint span { display: none; }
 }

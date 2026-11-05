@@ -4,7 +4,7 @@ usage: python tools/rebuild_frames.py <folder with upscaled fNNNN.png at 24 fps>
 -> media/apartment/frames/   desktop: 60 fps, 1600x900, WebP q78 (~33 KB a frame)
    media/apartment/frames-m/ phones:  30 fps, 648x1080 crop at full height, WebP q66
      (a portrait screen only shows a third of the wide frame, so phones get that part sharp instead of a whole small frame;
-      the crop pans along PAN so the object each room title names stays on screen)
+      the crop stays in the middle, so the camera moves exactly as in the original walk)
    WebP, not AVIF: AVIF is smaller but slower to decode, and scrubbing decodes a new frame every repaint.
 Afterwards run tools/pack_frames.py.
 """
@@ -17,9 +17,9 @@ SETS = {
     'frames': ('scale=1600:900:flags=lanczos', 78),
     'frames-m': (None, 66),
 }
-# phone crop centre as a share of the frame width, [video time, x]; eased between points
-PAN = [(0, .5), (0.9, .5), (1.4, .32), (2.0, .32), (2.45, .72), (2.9, .72), (3.2, .7), (3.5, .66), (3.9, .3), (4.2, .28),
-       (4.7, .78), (5.1, .83), (5.4, .6), (5.7, .5), (8.3, .5), (8.9, .62), (9.6, .62)]
+# phone crop centre as a share of the frame width, [video time, x]; eased between points.
+# Kept steady in the middle: panning to follow each room title made the camera swing from side to side.
+PAN = [(0, .5), (9.6, .5)]
 MW, MH, CW = 1920, 1080, 648
 # the walk ends where the stairs begin (6.59 s): frames kept per set (desktop 60 fps, phone every 2nd)
 KEEP = {'frames': 395, 'frames-m': 198}

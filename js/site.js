@@ -224,11 +224,18 @@
   tick(); setInterval(tick, 20000);
   watch($('.foot-word'));
 
-  /* ---------- per-frame work ---------- */
-  const walk = $('.walk'), top = $('.top'), darks = $$('.is-dark');
+  /* ---------- scroll work: runs only on frames where the page actually moved ----------
+     Phones skip the photo-block opening and the field parallax: moving clipped, masked photos every frame is what made them stutter. */
+  const walk = $('.walk'), top = $('.top');
   const bleedImg = $('.bl-img img'), bleedBox = $('.bl-img'), bleed = $('.bleed');
+  const still = !fine || innerWidth < 900;
+  const [px, py] = place();
+  plane.style.transform = `translate3d(${px.toFixed(1)}px,${py.toFixed(1)}px,0)`;
   function frame() {
+    queued = false;
     const vh = innerHeight;
+    top.classList.toggle('bg', walk.getBoundingClientRect().bottom < 40);
+    if (still) return;
     // photo block: opens from the grid frame to full width while it comes in, with a slow parallax inside
     const br = bleed.getBoundingClientRect();
     if (br.bottom > 0 && br.top < vh) {
@@ -236,14 +243,16 @@
       bleedBox.style.clipPath = `inset(${((1 - o) * 6).toFixed(2)}% calc(var(--pad) * ${(1 - o).toFixed(3)}) round ${((1 - o) * 18).toFixed(1)}px)`;
       bleedImg.style.transform = `translate3d(0,${((br.top / vh) * -8).toFixed(2)}%,0) scale(1.12)`;
     }
-    // header: dark text over the light page, light over the hero and the dark bands
-    const overDark = darks.some(d => { const r = d.getBoundingClientRect(); return r.top < 40 && r.bottom > 40; });
-    top.classList.toggle('bg', walk.getBoundingClientRect().bottom < 40);
     // archive: slow vertical parallax with page scroll
-    const [px, py] = place(), fr = field.getBoundingClientRect();
-    const sp = clamp((vh - fr.top) / (vh + fr.height), 0, 1);
-    plane.style.transform = `translate3d(${px.toFixed(1)}px,${(py - sp * 120).toFixed(1)}px,0)`;
-    requestAnimationFrame(frame);
+    const fr = field.getBoundingClientRect();
+    if (fr.bottom > 0 && fr.top < vh) {
+      const sp = clamp((vh - fr.top) / (vh + fr.height), 0, 1);
+      plane.style.transform = `translate3d(${px.toFixed(1)}px,${(py - sp * 120).toFixed(1)}px,0)`;
+    }
   }
-  requestAnimationFrame(frame);
+  let queued = false;
+  const queue = () => { if (!queued) { queued = true; requestAnimationFrame(frame); } };
+  addEventListener('scroll', queue, { passive: true });
+  addEventListener('resize', queue);
+  queue();
 })();
