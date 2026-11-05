@@ -32,9 +32,6 @@
     { t: 'Реализация', img: 'media/p/neoclassic/013.webp', pos: '50% 50%', d: 'Ведём авторский надзор: выезжаем на объект и следим, чтобы ремонт шёл строго по проекту.',
       r: ['Готовый интерьер, как на визуализациях'], you: 'Принимать этапы работ' }
   ];
-  // studio shots block: a few of the best frames across the projects
-  const SHOTS = [['house', '014'], ['hotel', '004'], ['neoclassic', '013'], ['greek', '007'], ['terrace', '024'], ['grey', '001'],
-    ['graphite', '003'], ['wokebowl', '010'], ['terrace', '042'], ['hotel', '037'], ['neoclassic', '007'], ['house', '024']];
   const FAQ = [
     ['С чего начинается работа?', 'С консультации и выезда на объект: знакомимся, обсуждаем задачу и бюджет, делаем замеры. Затем фиксируем объём работ и сроки в договоре.'],
     ['Можно заказать только планировку или только визуализацию?', 'Да. Каждый этап можно взять отдельно — например, планировку для перепланировки или визуализации по готовому плану.'],
@@ -62,11 +59,12 @@
     const a = document.createElement('a');
     a.className = 'wk rv'; a.href = `project.html?id=${p.id}`;
     a.dataset.cat = p.cat; a.dataset.done = p.status === 'Реализован' ? '1' : '';
-    // every row shows its cover photo right away (phones and tablets have no hover)
-    a.innerHTML = `<span class="wk-card"><img src="media/p/${p.id}/t/${p.cover}.webp" alt="${p.name}" loading="lazy"></span>
-      <span class="wk-name"><b>${p.name}</b><span class="mono wk-type">${p.type}</span></span>
+    // a card: photo, type and status, name, rooms and a full-size button (no hover needed on phones)
+    a.innerHTML = `<span class="wk-card"><img src="media/p/${p.id}/t/${p.cover}.webp" alt="${p.name}" loading="lazy"><span class="mono wk-st">${p.status}</span></span>
+      <span class="mono wk-type">${p.type}</span>
+      <b class="wk-name">${p.name}</b>
       <span class="wk-rooms">${p.rooms.slice(0, 4).join(', ')}${p.rooms.length > 4 ? '…' : ''}</span>
-      <span class="mono wk-st">${p.status}<em>Смотреть →</em></span>`;
+      <span class="btn wk-go">Смотреть проект <i></i></span>`;
     list.appendChild(a); watch(a);
   });
   $('.filters').addEventListener('click', e => {
@@ -75,26 +73,39 @@
     const f = b.dataset.f;
     $$('.wk', list).forEach(r => r.classList.toggle('off', !(f === 'all' || (f === 'done' ? r.dataset.done : r.dataset.cat === f))));
   });
-  $('.views').addEventListener('click', e => {
-    const b = e.target.closest('button'); if (!b) return;
-    $$('button', b.parentNode).forEach(x => x.classList.toggle('on', x === b));
-    $('.works').classList.toggle('as-grid', b.dataset.v === 'grid');
-  });
 
   /* ---------- videos from the sites ---------- */
   if (window.VideoCards) window.VideoCards.render($('.rl-row'), window.VIDEOS, { autoplay: true });
 
-  /* ---------- studio shots: grey until hovered, click opens the viewer ---------- */
-  const arGrid = $('.ar-grid');
-  SHOTS.forEach(([id, f]) => {
-    const pi = PJ.findIndex(p => p.id === id), p = PJ[pi], si = p ? p.shots.findIndex(x => x.f === f) : -1;
-    if (si < 0) return;
-    const el = document.createElement('button');
-    el.type = 'button'; el.className = 'ar-item rv';
-    el.innerHTML = `<img src="${p.shots[si].thumb}" alt="${p.name}" loading="lazy"><span class="mono">${p.name}</span>`;
-    el.addEventListener('click', () => window.Viewer.open(pi, si));
-    arGrid.appendChild(el); watch(el);
-  });
+  /* ---------- studio shots: a collage of a few frames from every project; it sits still (no dragging),
+     only drifts a little with the page. Grey until hovered, click opens the viewer. ---------- */
+  const field = $('.ar-field'), plane = $('.ar-plane');
+  const PER = 4;   // frames taken from each project
+  const picks = [];
+  for (let r = 0; r < PER; r++) PJ.forEach((p, pi) => { if (p.shots[r]) picks.push({ p, pi, si: r }); });
+  function collage() {
+    const W = field.clientWidth, COLS = W < 700 ? 3 : 6, GAP = W < 700 ? 8 : 16;
+    const CW = (W - GAP * (COLS - 1)) / COLS;
+    // staggered columns like a pin board; every column starts above the frame (and ends below it) by more than the drift
+    const colH = new Array(COLS).fill(0).map((_, c) => -24 - (c % 2) * CW * 0.4);
+    plane.innerHTML = '';
+    picks.forEach(x => {
+      const c = colH.indexOf(Math.min(...colH)), s = x.p.shots[x.si];
+      const h = Math.round(CW * s.h / s.w);
+      const el = document.createElement('button');
+      el.type = 'button'; el.className = 'ar-item';
+      el.style.cssText = `left:${(c * (CW + GAP)).toFixed(1)}px;top:${colH[c]}px;width:${CW.toFixed(1)}px;height:${h}px`;
+      el.innerHTML = `<img src="${s.thumb}" alt="${x.p.name}" loading="lazy"><span class="mono">${x.p.name}</span>`;
+      el.addEventListener('click', () => window.Viewer.open(x.pi, x.si));
+      plane.appendChild(el);
+      colH[c] += h + GAP;
+    });
+    // the field is as tall as the shortest column, so it ends on a full row of pictures with no gaps
+    field.style.height = Math.min(...colH) - GAP - 24 + 'px';
+  }
+  collage();
+  let cw = innerWidth;
+  addEventListener('resize', () => { if (innerWidth !== cw) { cw = innerWidth; collage(); } });
 
   /* ---------- services ---------- */
   const svList = $('.sv-list'), svImg = $('.sv-img'), svCap = $('.sv-cap');
@@ -109,7 +120,7 @@
   SERVICES.forEach((s, i) => {
     const li = document.createElement('li');
     li.className = 'sv rv';
-    li.innerHTML = `<button type="button" class="sv-row"><span class="mono">${pad(i + 1)}</span><b>${s.t}</b><i></i></button>
+    li.innerHTML = `<button type="button" class="sv-row"><b>${s.t}</b><i></i></button>
       <div class="sv-more"><div><p>${s.d}</p><ul>${s.li.map(x => `<li class="mono">${x}</li>`).join('')}</ul></div></div>`;
     $('.sv-row', li).addEventListener('click', () => svSet(i));
     if (fine) li.addEventListener('mouseenter', () => svSet(i));
@@ -117,15 +128,12 @@
   });
   svSet(0);
 
-  /* ---------- process: six compact cards — picture, step, what we do, what the client gets ---------- */
+  /* ---------- process: six steps in one row on a line — step, what we do, what the client gets ---------- */
   const stList = $('.st-list');
   STEPS.forEach((s, i) => {
     const li = document.createElement('li');
     li.className = 'st rv';
-    li.innerHTML = `<div class="st-img"><img src="${s.img}" alt="${s.t}" loading="lazy" style="object-position:${s.pos}"></div>
-      <div class="st-t"><span class="mono">${pad(i + 1)}</span><b>${s.t}</b></div>
-      <p class="st-d">${s.d}</p>
-      <p class="st-r"><span class="mono">Результат</span>${s.r.join(' · ')}</p>`;
+    li.innerHTML = `<b class="st-t">${s.t}</b><p class="st-d">${s.d}</p><p class="st-r">${s.r.join(' · ')}</p>`;
     stList.appendChild(li); watch(li);
   });
 
@@ -188,7 +196,7 @@
   FAQ.forEach(([q, a], i) => {
     const d = document.createElement('div');
     d.className = 'qa rv';
-    d.innerHTML = `<button type="button" class="qa-q" aria-expanded="false"><span class="mono">${pad(i + 1)}</span><b>${q}</b><i></i></button><div class="qa-a"><div><p>${a}</p></div></div>`;
+    d.innerHTML = `<button type="button" class="qa-q" aria-expanded="false"><b>${q}</b><i></i></button><div class="qa-a"><div><p>${a}</p></div></div>`;
     $('.qa-q', d).addEventListener('click', () => {
       const open = !d.classList.contains('open');
       $$('.qa', fq).forEach(x => { x.classList.remove('open'); $('.qa-q', x).setAttribute('aria-expanded', 'false'); });
@@ -220,6 +228,8 @@
     const overDark = darks.some(d => { const r = d.getBoundingClientRect(); return r.top < 40 && r.bottom > 40; });
     top.classList.toggle('on-light', light() && walk.getBoundingClientRect().bottom < 40 && !overDark);
     top.classList.toggle('bg', walk.getBoundingClientRect().bottom < 40);
+    const fr = field.getBoundingClientRect();
+    if (fr.bottom > 0 && fr.top < vh) plane.style.transform = `translate3d(0,${(((fr.top + fr.height / 2) / vh - 0.5) * -40).toFixed(1)}px,0)`;
     requestAnimationFrame(frame);
   }
   requestAnimationFrame(frame);

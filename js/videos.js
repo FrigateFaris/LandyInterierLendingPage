@@ -41,7 +41,7 @@
       b.type = 'button'; b.className = 'rl';
       b.innerHTML = `<span class="rl-media"><img src="${v.poster}" alt="${v.t}" loading="lazy"><video muted loop playsinline preload="none"></video>
           <i class="rl-play" aria-hidden="true"></i></span>
-        <span class="mono rl-k">${pad(i + 1)} · ${v.t}</span><span class="rl-d">${v.d}</span>`;
+        <span class="mono rl-k">${v.t}</span><span class="rl-d">${v.d}</span>`;
       const vid = b.querySelector('video');
       cards.push({ b, vid, v });
       if (fine) {

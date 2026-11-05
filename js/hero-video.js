@@ -158,7 +158,7 @@
   const scenes = (CFG.scenes || []).map((sc, i, all) => {
     const el = document.createElement('div');
     el.className = 'scene ' + (sc.side || 'left');
-    el.innerHTML = `<span class="m"><span>${pad(i + 1)} / ${pad(all.length)} — ${sc.eyebrow}</span></span>` +
+    el.innerHTML = `<span class="m"><span>${sc.eyebrow}</span></span>` +
       `<h3>${sc.title.split('\n').map(l => `<span class="m"><span>${l}</span></span>`).join('')}</h3>` +
       `<span class="m sub"><span>${sc.sub}</span></span>`;
     layer.appendChild(el);
@@ -179,7 +179,6 @@
     if (i === activeCh) return;
     activeCh = i;
     chapter.classList.remove('in'); void chapter.offsetWidth;
-    chNum.textContent = `${pad(i + 1)} / ${pad(CFG.chapters.length)}`;
     chName.textContent = CFG.chapters[i].name;
     chapter.classList.add('in');
     [...ticks.children].forEach((b, k) => b.classList.toggle('on', k <= i));
