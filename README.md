@@ -8,7 +8,7 @@ project.html        страница проекта: project.html?id=house | hot
 css/                hero.css (hero + кнопки), site.css (разделы, темы), project.css
 js/                 hero-video.js (прогулка по кадрам), frame-packs.js (оглавление пачек, генерируется), site.js (разделы главной), project.js,
                     projects.js (список проектов), gallery-data.js (все фото, генерируется),
-                    viewer.js (просмотр фото), videos.js, lead.js (заявки), theme.js (светлая/тёмная)
+                    viewer.js (просмотр фото), videos.js, lead.js (заявки)
 media/apartment/    кадры hero: frames/ (компьютер, 60 fps) и frames-m/ (телефон, 30 fps), WebP;
                     pack/ — те же кадры, склеенные в 8 и 6 файлов (сайт качает их на хостинге, проценты по байтам)
 media/p/<проект>/   фото проектов (до 2200 px) и t/ — превью 640 px, WebP

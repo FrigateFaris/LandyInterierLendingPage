@@ -11,10 +11,10 @@
   document.title = `${P.name} — Landy Interior`;
 
   /* ---------- head ---------- */
-  $('.pj-pos').textContent = `${P.code} · ${pad(pi + 1)} / ${pad(PJ.length)}`;
+  $('.pj-pos').textContent = P.type;
   $('.pj-title').innerHTML = P.name.split(' ').map(w => `<span class="ln"><span>${w}</span></span>`).join(' ');
   const chapters = [...new Set(P.shots.map(s => s.ch).filter(Boolean))];
-  $('.pj-table').innerHTML = [['Тип', P.type], ['Статус', P.status], ['Помещения', P.rooms.join(', ')], ['Кадров', pad(P.shots.length, 3)]]
+  $('.pj-table').innerHTML = [['Тип', P.type], ['Статус', P.status], ['Помещения', P.rooms.join(', ')]]
     .map(([k, v]) => `<div><dt class="mono">${k}</dt><dd>${v}</dd></div>`).join('');
   $('.pj-lead').textContent = P.lead;
   const cover = P.shots.find(s => s.f === P.cover) || P.shots[0];
@@ -22,17 +22,17 @@
 
   /* ---------- chapters (hotel) ---------- */
   const chNav = $('.pj-chapters');
-  if (chapters.length > 1) chNav.innerHTML = chapters.map((c, i) => `<a href="#ch-${i}">${pad(i + 1)} ${c} <span>${P.shots.filter(s => s.ch === c).length}</span></a>`).join('');
+  if (chapters.length > 1) chNav.innerHTML = chapters.map((c, i) => `<a href="#ch-${i}">${c}</a>`).join('');
   else chNav.remove();
 
   /* ---------- gallery: landscape = full row, portraits in pairs/trios with alternating weights ---------- */
   const gal = $('.pj-gallery');
   const fig = (s, cls) => `<figure class="ph ${cls}" data-k="${P.shots.indexOf(s)}"><div class="ph-in"><img src="${s.src}" alt="${P.name}, кадр ${P.shots.indexOf(s) + 1}" loading="lazy" width="${s.w}" height="${s.h}"></div>
-    <figcaption class="mono"><span>${P.code}-${pad(P.shots.indexOf(s) + 1, 3)}</span>${s.ch ? `<span>${s.ch}</span>` : ''}</figcaption></figure>`;
+    ${s.ch ? `<figcaption class="mono"><span>${s.ch}</span></figcaption>` : ''}</figure>`;
   let html = '', row = 0;
   const groups = chapters.length > 1 ? chapters.map(c => [c, P.shots.filter(s => s.ch === c)]) : [['', P.shots]];
   groups.forEach(([c, shots], gi) => {
-    if (c) html += `<h2 class="ph-ch" id="ch-${gi}"><span class="mono">${pad(gi + 1)}</span>${c}<span class="mono">${pad(shots.length)} кадров</span></h2>`;
+    if (c) html += `<h2 class="ph-ch" id="ch-${gi}">${c}</h2>`;
     const queue = shots.slice();
     while (queue.length) {
       const s = queue[0];
@@ -45,7 +45,7 @@
         <button class="btn" type="button" data-lead="Дизайн-проект">Оставить заявку <i></i></button></div>`;
     }
   });
-  if (P.videos.length) html = `<h2 class="ph-ch" id="video"><span class="mono">Видео</span>Вживую<span class="mono">${pad(P.videos.length)} видео</span></h2><div class="pj-videos"></div>` + html;
+  if (P.videos.length) html = `<h2 class="ph-ch" id="video">Вживую</h2><div class="pj-videos"></div>` + html;
   gal.innerHTML = html;
   if (P.videos.length && window.VideoCards) window.VideoCards.render($('.pj-videos'), P.videos.map(v => Object.assign({ d: P.name }, v, { t: v.t })));
   gal.addEventListener('click', e => { const f = e.target.closest('.ph'); if (f) window.Viewer.open(pi, +f.dataset.k, { link: false }); });

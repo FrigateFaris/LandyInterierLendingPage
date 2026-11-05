@@ -83,7 +83,7 @@
   /* ---------- videos from the sites ---------- */
   if (window.VideoCards) window.VideoCards.render($('.rl-row'), window.VIDEOS, { autoplay: true });
 
-  /* ---------- archive: a draggable field with every photo ---------- */
+  /* ---------- archive: a still field of photos (no dragging), drifting slowly with the page ---------- */
   const field = $('.ar-field'), plane = $('.ar-plane');
   const ALL = [];
   PJ.forEach((p, pi) => p.shots.forEach((s, si) => ALL.push({ p, pi, s, si })));
@@ -99,26 +99,14 @@
     el.type = 'button'; el.className = 'ar-item';
     el.style.cssText = `left:${c * (CW + GAP)}px;top:${colH[c]}px;width:${CW}px;height:${h}px`;
     el.innerHTML = `<img src="${x.s.thumb}" alt="${x.p.name}" loading="lazy"><span class="mono">${x.p.name}</span>`;
-    el.addEventListener('click', () => { if (!dragged) window.Viewer.open(x.pi, x.si); });
+    el.addEventListener('click', () => window.Viewer.open(x.pi, x.si));
     plane.appendChild(el);
     colH[c] += h + GAP;
   });
   const PW = COLS * (CW + GAP) - GAP, PH = Math.max(...colH);
   plane.style.width = PW + 'px'; plane.style.height = PH + 'px';
-  let px = 0, py = 0, vx = 0, vy = 0, drag = null, dragged = false;
-  const limits = () => [Math.min(0, field.clientWidth - PW), Math.min(0, field.clientHeight - PH)];
-  (function center() { const [lx, ly] = limits(); px = lx / 2; py = ly / 3; })();
-  field.addEventListener('pointerdown', e => { drag = { x: e.clientX, y: e.clientY, px, py, t: performance.now() }; dragged = false; vx = vy = 0; field.classList.add('grab'); });
-  addEventListener('pointermove', e => {
-    if (!drag) return;
-    const dx = e.clientX - drag.x, dy = e.clientY - drag.y;
-    if (Math.abs(dx) + Math.abs(dy) > 6) dragged = true;
-    const nx = drag.px + dx, ny = drag.py + dy;
-    vx = nx - px; vy = ny - py; px = nx; py = ny;
-  });
-  addEventListener('pointerup', () => { if (!drag) return; drag = null; field.classList.remove('grab'); setTimeout(() => { dragged = false; }, 0); });
-  // touch: horizontal swipes pan the field, vertical ones scroll the page
-  field.style.touchAction = 'pan-y';
+  // centred in the field
+  const place = () => [Math.min(0, field.clientWidth - PW) / 2, Math.min(0, field.clientHeight - PH) / 3];
 
   /* ---------- services ---------- */
   const svList = $('.sv-list'), svImg = $('.sv-img'), svCap = $('.sv-cap');
@@ -238,7 +226,6 @@
 
   /* ---------- per-frame work ---------- */
   const walk = $('.walk'), top = $('.top'), darks = $$('.is-dark');
-  const light = () => document.documentElement.dataset.theme === 'light';
   const bleedImg = $('.bl-img img'), bleedBox = $('.bl-img'), bleed = $('.bleed');
   function frame() {
     const vh = innerHeight;
@@ -251,14 +238,9 @@
     }
     // header: dark text over the light page, light over the hero and the dark bands
     const overDark = darks.some(d => { const r = d.getBoundingClientRect(); return r.top < 40 && r.bottom > 40; });
-    top.classList.toggle('on-light', light() && walk.getBoundingClientRect().bottom < 40 && !overDark);
     top.classList.toggle('bg', walk.getBoundingClientRect().bottom < 40);
-    // archive: inertia + bounds
-    if (!drag) { px += vx; py += vy; vx *= 0.92; vy *= 0.92; }
-    const [lx, ly] = limits();
-    if (!drag) { px += (clamp(px, lx, 0) - px) * 0.2; py += (clamp(py, ly, 0) - py) * 0.2; }
-    // slow vertical parallax with page scroll
-    const fr = field.getBoundingClientRect();
+    // archive: slow vertical parallax with page scroll
+    const [px, py] = place(), fr = field.getBoundingClientRect();
     const sp = clamp((vh - fr.top) / (vh + fr.height), 0, 1);
     plane.style.transform = `translate3d(${px.toFixed(1)}px,${(py - sp * 120).toFixed(1)}px,0)`;
     requestAnimationFrame(frame);

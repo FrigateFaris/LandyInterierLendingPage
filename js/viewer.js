@@ -13,7 +13,7 @@
     const sh = P.shots; i = (k + sh.length) % sh.length;
     img.classList.remove('in'); void img.offsetWidth;
     img.src = sh[i].src; img.alt = `${P.name}, кадр ${i + 1}`; img.classList.add('in');
-    cap.textContent = `${P.code}-${pad(i + 1)}${sh[i].ch ? ' · ' + sh[i].ch : ''}`;
+    cap.textContent = sh[i].ch || P.type;
     cnt.textContent = `${pad(i + 1)} / ${pad(sh.length)}`;
     [...thumbs.children].forEach((b, n) => b.classList.toggle('on', n === i));
     const on = thumbs.children[i]; if (on) on.scrollIntoView({ block: 'nearest', inline: 'center' });

@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@200;300;400;500;600&display=swap" rel="stylesheet">
-<script>try{document.documentElement.dataset.theme=localStorage.getItem('li-theme')||'dark'}catch(e){document.documentElement.dataset.theme='dark'}</script>
+<script>document.documentElement.dataset.theme='dark'</script>
 <link rel="stylesheet" href="css/hero.css">
 <link rel="stylesheet" href="css/site.css">
 </head>
@@ -61,7 +61,6 @@
     <a href="#videos">Видео</a><a href="#price">Бриф</a><a href="#projects">Работы</a><a href="#services">Услуги</a><a href="#rates">Тарифы</a><a href="#faq">Вопросы</a>
   </nav>
   <div class="top-r">
-    <button class="theme-t mono" type="button" aria-label="Сменить тему"><i></i><span></span></button>
     <a class="btn" href="#contact" data-lead>Обсудить проект <i></i></a>
   </div>
 </header>
@@ -113,11 +112,10 @@
     <div class="wrap meta-row"><span class="mono">Ташкент · дизайн интерьера</span></div>
     <h2 class="st-text wrap">
       <span class="st-line">Проектируем интерьеры,</span>
-      <span class="st-line">в которых <em>хочется жить</em> —</span>
-      <span class="st-line">от планировки до ключей</span>
+      <span class="st-line">в которых <em>хочется жить</em></span>
     </h2>
     <div class="wrap grid st-cols">
-      <p class="s7 st-lead rv">Работаем с квартирами, частными домами, отелями и кафе. Показываем интерьер ещё до ремонта: планировка, материалы, свет и смета собраны в одном проекте. Потом выезжаем на объект и следим, чтобы всё получилось как на визуализациях.</p>
+      <p class="s7 st-lead rv">Работаем с квартирами, частными домами, отелями и кафе. Показываем интерьер ещё до ремонта: планировка, материалы, свет и смета собраны в одном проекте.</p>
       <div class="s5 st-act rv"><button class="btn" type="button" data-lead="Консультация">Записаться на консультацию <i></i></button></div>
     </div>
     <dl class="wrap grid st-facts">
@@ -229,7 +227,7 @@
   <section class="archive is-dark" id="archive">
     <div class="wrap sec-head light">
       <h2 class="h2">Некоторые <em>наши кадры</em></h2>
-      <p class="mono ar-hint">Тяните, чтобы смотреть · нажмите на кадр, чтобы открыть проект</p>
+      <p class="mono ar-hint">Нажмите на кадр, чтобы открыть его крупно</p>
     </div>
     <div class="ar-field"><div class="ar-plane"></div></div>
     <div class="wrap ar-foot mono"><span>Часть кадров из наших проектов</span><span>Визуализации и фото реализованных объектов</span></div>
@@ -383,7 +381,6 @@ window.HERO = {
 <script src="js/gallery-data.js"></script>
 <script src="js/projects.js"></script>
 <script src="js/viewer.js"></script>
-<script src="js/theme.js"></script>
 <script src="js/videos.js"></script>
 <script src="js/lead.js"></script>
 <script src="js/site.js"></script>
